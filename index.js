@@ -115,6 +115,8 @@ app.post('/move', (request, response) => {
         move = 'down';
       }
     }
+    // Say we're changing direction:
+    console.log(`Changing direction: ${move}`);
   }
 
   // Update our direction:
