@@ -74,7 +74,6 @@ app.post('/move', (request, response) => {
   let move = state.direction;
 
   // Build up a list of occupied squares:
-  const { you: { body: [head] }, board: { food, snakes } } = request.body;
   // We add a fence along the edges that's "occupied" to make the avoidance logic
   // below a little simpler:
   const map = new Uint8Array(BOARD_SIZE * BOARD_SIZE);
@@ -89,12 +88,14 @@ app.post('/move', (request, response) => {
     map[(BOARD_SIZE * (i + 1)) - 1] = 1;
   }
   // Put the snek bodies in the map:
+  const { snakes = [] } = request.body.board || {};
   snakes.forEach(({ body }) => {
     body.forEach(({ x, y }) => (map[(y + 1) * BOARD_SIZE + (x + 1)] = 1));
   });
 
   // However, if it looks like the square in our future path is, or will be,
   // occupied by a wall or another snek, then we should change direction:
+  const [head] = (request.body.you || {}).body || [{ x: 0, y: 0 }];
   const x = head.x + 1;
   const y = head.y + 1;
   // Are we clear?
