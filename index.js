@@ -28,14 +28,10 @@ app.post('/ping', (_, res) => res.json({}));
 
 // Handle POST request to '/move'
 app.post('/move', (request, response) => {
-  // NOTE: Do something here to generate your move
+  console.log(request);
+  let [move] = ['up', 'down', 'left', 'right'].splice((Math.random() * 1000) % 4, 1);
 
-  // Response data
-  const data = {
-    move: 'up', // one of: ['up','down','left','right']
-  }
-
-  return response.json(data)
+  return response.json({ move });
 })
 
 
