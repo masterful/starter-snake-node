@@ -21,16 +21,10 @@ app.use(poweredByHandler);
 
 // --- SNAKE LOGIC GOES BELOW THIS LINE ---
 
-// Handle POST request to '/start'
-app.post('/start', (_, response) => {
-  const data = {
-    color: '#ffa500',
-    headType: 'pixel',
-    tailType: 'block-bum',
-  };
-
-  return response.json(data);
-});
+// Simple routes:
+app.post('/start', (_, res) => res.json({ color: '#ffa500', headType: 'pixel', tailType: 'block-bum' }));
+app.post('/end', (_, res) => res.json({}));
+app.post('/ping', (_, res) => res.json({}));
 
 // Handle POST request to '/move'
 app.post('/move', (request, response) => {
@@ -44,8 +38,6 @@ app.post('/move', (request, response) => {
   return response.json(data)
 })
 
-app.post('/end', (_, response) => response.json({}));
-app.post('/ping', (_, response) => response.json({}));
 
 // --- SNAKE LOGIC GOES ABOVE THIS LINE ---
 
