@@ -28,7 +28,7 @@ app.post('/ping', (_, res) => res.json({}));
 
 // Handle POST request to '/move'
 app.post('/move', (request, response) => {
-  console.log(request);
+  console.log(request.body);
   let [move] = ['up', 'down', 'left', 'right'].splice((Math.random() * 1000) % 4, 1);
 
   return response.json({ move });
