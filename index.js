@@ -23,46 +23,59 @@ app.use(poweredByHandler);
 // ---                   SNAKE LOGIC GOES BELOW THIS LINE                    ---
 // =============================================================================
 
-// Given a map and position, this determines if you can
-// proceed safely in the given direction
-function isClear({ map, x, y, move }) {
-  // Going UP
-  if (move === 'up') {
-    // Is something there right now?
-    const occupied = map[(y - 1) * BOARD_SIZE + x];
-    if (occupied === 1) { return false; }
-  // Going DOWN
-  } else if (move === 'down') {
-    // Is something there right now?
-    const occupied = map[(y + 1) * BOARD_SIZE + x];
-    if (occupied === 1) { return false; }
-  // Going LEFT
-  } else if (move === 'left') {
-    // Is something there right now?
-    const occupied = map[y * BOARD_SIZE + x - 1];
-    if (occupied === 1) { return false; }
-  // Going RIGHT
-  } else if (move === 'right') {
-    // Is something there right now?
-    const occupied = map[y * BOARD_SIZE + x + 1];
-    if (occupied === 1) { return false; }
-  }
-  // default true:
-  return true;
-}
-
 // STATE/HISTORY:
-const state = {
-  direction: 'up', // default direction for snek is up
-};
+let direction = 'up'; // default direction for snek is up
 let BOARD_SIZE = 11;
+
+class Map {
+  constructor() {
+    this.array = (new Int8Array(BOARD_SIZE * BOARD_SIZE)).fill(0);
+  }
+
+  get(x, y) {
+    if (x < 0 || x >= BOARD_SIZE) { return -50; }
+    if (y < 0 || y >= BOARD_SIZE) { return -50; }
+    return this.array[y * BOARD_SIZE + x];
+  }
+
+  add(x, y, addition) {
+    this.array[y * BOARD_SIZE + x] += addition;
+  }
+
+  reweigh() {
+    const array = (new Int8Array(BOARD_SIZE * BOARD_SIZE)).fill(0);
+    for (let x = 0; x < BOARD_SIZE; x ++) {
+      for (let y = 0; y < BOARD_SIZE; y ++) {
+        array[y * BOARD_SIZE + x] = this.get(x - 1, y - 1) * 0.0555 // 🡤
+                                  + this.get(x    , y - 1) * 0.0555 // 🡡
+                                  + this.get(x + 1, y - 1) * 0.0555 // 🡥
+                                  + this.get(x - 1, y    ) * 0.0555 // 🡠
+                                  + this.get(x    , y    ) * 0.1111 // -
+                                  + this.get(x + 1, y    ) * 0.0555 // 🡢
+                                  + this.get(x - 1, y + 1) * 0.0555 // 🡧
+                                  + this.get(x    , y + 1) * 0.0555 // 🡣
+                                  + this.get(x + 1, y + 1) * 0.0555;// 🡦
+      }
+    }
+    this.array = array;
+  }
+
+  print() {
+    console.log('');
+    for (let y = 0; y < BOARD_SIZE; y ++) {
+      const start = y * BOARD_SIZE;
+      const row = Array.from(this.array.slice(start, start + BOARD_SIZE));
+      console.log(row.map(i => i.toString().padStart(4)).join(' '));
+    }
+  }
+}
 
 // Simple routes:
 app.post('/start', (req, res) => {
   // Update our board:
   const { width = 11 } = req.body.board || {};
-  // Boards are presumed to be square (we add 2 for the fence on either side).
-  BOARD_SIZE = width + 2;
+  // Boards are presumed to be square
+  BOARD_SIZE = width;
 
   return res.json({ color: '#ffa500', headType: 'pixel', tailType: 'block-bum' });
 });
@@ -70,59 +83,44 @@ app.post('/end', (_, res) => res.json({}));
 app.post('/ping', (_, res) => res.json({}));
 
 // Handle POST request to '/move'
-app.post('/move', (request, response) => {
+app.post('/move', async (request, response) => {
   // By default, continue in the direction we were going:
-  let move = state.direction;
+  let move = direction;
 
-  // Build up a list of occupied squares:
-  // We add a fence along the edges that's "occupied" to make the avoidance logic
-  // below a little simpler:
-  const map = new Uint8Array(BOARD_SIZE * BOARD_SIZE);
-  for (let i = 0; i < BOARD_SIZE; i ++) {
-    // top fence:
-    map[i] = 1;
-    // bottom fence:
-    map[(BOARD_SIZE - 1) * BOARD_SIZE + i] = 1;
-    // left fence:
-    map[BOARD_SIZE * i] = 1;
-    // right fence:
-    map[(BOARD_SIZE * (i + 1)) - 1] = 1;
-  }
+  // Build a map of the board, and then flood fill it to find a nice route
+  const map = new Map();
   // Put the snek bodies in the map:
   const { snakes = [] } = request.body.board || {};
   snakes.forEach(({ body }) => {
-    body.forEach(({ x, y }) => (map[(y + 1) * BOARD_SIZE + (x + 1)] = 1));
+    body.forEach(({ x, y }) => map.add(x, y, -30));
   });
+  // Only if we're low enough on health, should we add food as an incentive
+  const { health = 100 } = request.body.you || {};
+  if (health < 30) {
+    const { food = [] } = request.body.board || {};
+    food.forEach(({ x, y }) => map.add(x, y, 20));
+  }
+
+  // Update the map by weighing neighbours:
+  map.reweigh();
+  map.reweigh();
 
   // However, if it looks like the square in our future path is, or will be,
   // occupied by a wall or another snek, then we should change direction:
-  const [head] = (request.body.you || {}).body || [{ x: 0, y: 0 }];
-  const x = head.x + 1;
-  const y = head.y + 1;
-  // Are we clear?
-  if (!isClear({ map, x, y, move })) {
-    // Crap - which direction do we go, then?
-    if (move === 'up' || move === 'down') {
-      // try left:
-      move = 'left';
-      if (!isClear({ map, x, y, move })) {
-        // okay, last resort, turn right:
-        move = 'right';
-      }
-    } else {
-      // try up:
-      move = 'up';
-      if (!isClear({ map, x, y, move })) {
-        // okay, last resort, turn down:
-        move = 'down';
-      }
-    }
-    // Say we're changing direction:
-    console.log(`Changing direction: ${move}`);
-  }
+  const [{ x, y }] = (request.body.you || {}).body || [{ x: 0, y: 0 }];
+  const directions = [
+    { value: 'up',    opposite: 'down',   weight: map.get(x, y - 1) },
+    { value: 'down',  opposite: 'up',     weight: map.get(x, y + 1) },
+    { value: 'left',  opposite: 'right',  weight: map.get(x - 1, y) },
+    { value: 'right', opposite: 'left',   weight: map.get(x + 1, y) },
+  ];
+  // Which direction should we go?
+  // (Obviously not the opposite direction)
+  directions.find(direction => direction.opposite === move).weight = -Infinity;
+  move = directions.reduce((a, b) => (a.weight > b.weight ? a : b)).value;
 
   // Update our direction:
-  state.direction = move;
+  direction = move;
   return response.json({ move });
 });
 
