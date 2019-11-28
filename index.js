@@ -19,7 +19,9 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(poweredByHandler);
 
-// --- SNAKE LOGIC GOES BELOW THIS LINE ---
+// =============================================================================
+// ---                   SNAKE LOGIC GOES BELOW THIS LINE                    ---
+// =============================================================================
 
 // Given a map and position, this determines if you can
 // proceed safely in the given direction
@@ -122,10 +124,11 @@ app.post('/move', (request, response) => {
   // Update our direction:
   state.direction = move;
   return response.json({ move });
-})
+});
 
-
-// --- SNAKE LOGIC GOES ABOVE THIS LINE ---
+// =============================================================================
+// ---                   SNAKE LOGIC GOES ABOVE THIS LINE                    ---
+// =============================================================================
 
 app.use('*', fallbackHandler);
 app.use(notFoundHandler);
