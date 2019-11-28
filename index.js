@@ -29,7 +29,7 @@ let BOARD_SIZE = 11;
 
 class Map {
   constructor() {
-    this.array = (new Int8Array(BOARD_SIZE * BOARD_SIZE)).fill(0);
+    this.array = (new Int32Array(BOARD_SIZE * BOARD_SIZE)).fill(0);
   }
 
   get(x, y) {
@@ -43,28 +43,29 @@ class Map {
   }
 
   reweigh() {
-    const array = (new Int8Array(BOARD_SIZE * BOARD_SIZE)).fill(0);
+    const array = (new Int32Array(BOARD_SIZE * BOARD_SIZE)).fill(0);
     for (let x = 0; x < BOARD_SIZE; x ++) {
       for (let y = 0; y < BOARD_SIZE; y ++) {
-        array[y * BOARD_SIZE + x] = this.get(x - 1, y - 1) * 0.0555 // 🡤
-                                  + this.get(x    , y - 1) * 0.0555 // 🡡
-                                  + this.get(x + 1, y - 1) * 0.0555 // 🡥
-                                  + this.get(x - 1, y    ) * 0.0555 // 🡠
-                                  + this.get(x    , y    ) * 0.1111 // -
-                                  + this.get(x + 1, y    ) * 0.0555 // 🡢
-                                  + this.get(x - 1, y + 1) * 0.0555 // 🡧
-                                  + this.get(x    , y + 1) * 0.0555 // 🡣
-                                  + this.get(x + 1, y + 1) * 0.0555;// 🡦
+        array[y * BOARD_SIZE + x] = this.get(x - 1, y - 1) * 0.2 // 🡤
+                                  + this.get(x    , y - 1) * 0.2 // 🡡
+                                  + this.get(x + 1, y - 1) * 0.2 // 🡥
+                                  + this.get(x - 1, y    ) * 0.2 // 🡠
+                                  + this.get(x    , y    ) * 0.5 // -
+                                  + this.get(x + 1, y    ) * 0.2 // 🡢
+                                  + this.get(x - 1, y + 1) * 0.2 // 🡧
+                                  + this.get(x    , y + 1) * 0.2 // 🡣
+                                  + this.get(x + 1, y + 1) * 0.2;// 🡦
       }
     }
     this.array = array;
   }
 
-  print() {
+  print(head = {}) {
     console.log('');
     for (let y = 0; y < BOARD_SIZE; y ++) {
       const start = y * BOARD_SIZE;
       const row = Array.from(this.array.slice(start, start + BOARD_SIZE));
+      if (head.y === y) { row[head.x] = 'x'; }
       console.log(row.map(i => i.toString().padStart(4)).join(' '));
     }
   }
@@ -101,15 +102,15 @@ app.post('/move', async (request, response) => {
     food.forEach(({ x, y }) => map.add(x, y, 20));
   }
 
-  // Update the map by weighing neighbours:
-  map.reweigh();
-  map.reweigh();
-  map.reweigh();
-  map.reweigh();
-
   // However, if it looks like the square in our future path is, or will be,
   // occupied by a wall or another snek, then we should change direction:
   const [{ x, y }] = (request.body.you || {}).body || [{ x: 0, y: 0 }];
+
+  // Update the map by weighing neighbours:
+  map.print({ x, y });
+  map.reweigh();
+  map.print({ x, y });
+
   const directions = [
     { value: 'up',    opposite: 'down',   weight: map.get(x, y - 1) },
     { value: 'down',  opposite: 'up',     weight: map.get(x, y + 1) },
