@@ -22,14 +22,17 @@ app.use(poweredByHandler);
 // --- SNAKE LOGIC GOES BELOW THIS LINE ---
 
 // Simple routes:
-app.post('/start', (_, res) => res.json({ color: '#ffa500', headType: 'pixel', tailType: 'block-bum' }));
+app.post('/start', (req, res) => {
+  console.log(JSON.stringify(req.body));
+  return res.json({ color: '#ffa500', headType: 'pixel', tailType: 'block-bum' });
+});
 app.post('/end', (_, res) => res.json({}));
 app.post('/ping', (_, res) => res.json({}));
 
 // Handle POST request to '/move'
 app.post('/move', (request, response) => {
-  console.log(request.body);
-  let [move] = ['up', 'down', 'left', 'right'].splice((Math.random() * 1000) % 4, 1);
+  const { turn } = request.body;
+  let [move] = ['up', 'right', 'down', 'left'].splice((turn) % 4, 1);
 
   return response.json({ move });
 })
