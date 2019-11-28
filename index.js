@@ -57,11 +57,10 @@ let BOARD_SIZE = 11;
 
 // Simple routes:
 app.post('/start', (req, res) => {
-  console.log(JSON.stringify(req.body));
   // Update our board:
-  const { board } = req.body;
+  const { width = 11 } = req.body.board || {};
   // Boards are presumed to be square (we add 2 for the fence on either side).
-  BOARD_SIZE = board.width + 2;
+  BOARD_SIZE = width + 2;
 
   return res.json({ color: '#ffa500', headType: 'pixel', tailType: 'block-bum' });
 });
