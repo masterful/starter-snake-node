@@ -104,6 +104,8 @@ app.post('/move', async (request, response) => {
   // Update the map by weighing neighbours:
   map.reweigh();
   map.reweigh();
+  map.reweigh();
+  map.reweigh();
 
   // However, if it looks like the square in our future path is, or will be,
   // occupied by a wall or another snek, then we should change direction:
