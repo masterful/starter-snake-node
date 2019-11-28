@@ -5,11 +5,11 @@ WORKDIR $WORKDIR
 
 COPY    package.json package-lock.json ./
 
-RUN     npm install \
-    &&  adduser -D snek
-
-COPY    . ./
-RUN     chown snek:snek .
+RUN     adduser -D snek \
+    &&  chown snek:snek .
 
 USER    snek
+RUN     npm install
+COPY    . ./
+
 CMD     npm start
