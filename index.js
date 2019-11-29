@@ -46,15 +46,11 @@ class Map {
     const array = (new Int32Array(BOARD_SIZE * BOARD_SIZE)).fill(0);
     for (let x = 0; x < BOARD_SIZE; x ++) {
       for (let y = 0; y < BOARD_SIZE; y ++) {
-        array[y * BOARD_SIZE + x] = this.get(x - 1, y - 1) * 0.2 // 🡤
-                                  + this.get(x    , y - 1) * 0.2 // 🡡
-                                  + this.get(x + 1, y - 1) * 0.2 // 🡥
-                                  + this.get(x - 1, y    ) * 0.2 // 🡠
-                                  + this.get(x    , y    ) * 0.5 // -
-                                  + this.get(x + 1, y    ) * 0.2 // 🡢
-                                  + this.get(x - 1, y + 1) * 0.2 // 🡧
-                                  + this.get(x    , y + 1) * 0.2 // 🡣
-                                  + this.get(x + 1, y + 1) * 0.2;// 🡦
+        array[y * BOARD_SIZE + x] = this.get(x    , y - 1) * 0.5 // 🡡
+                                  + this.get(x - 1, y    ) * 0.5 // 🡠
+                                  + this.get(x    , y    )       // -
+                                  + this.get(x + 1, y    ) * 0.5 // 🡢
+                                  + this.get(x    , y + 1) * 0.5;// 🡣
       }
     }
     this.array = array;
