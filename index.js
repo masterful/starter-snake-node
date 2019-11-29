@@ -29,7 +29,7 @@ let BOARD_SIZE = 11;
 
 class Map {
   constructor() {
-    this.array = (new Int32Array(BOARD_SIZE * BOARD_SIZE)).fill(0);
+    this.array = (new Int32Array(BOARD_SIZE * BOARD_SIZE)).fill(10);
   }
 
   get(x, y) {
@@ -46,11 +46,11 @@ class Map {
     const array = (new Int32Array(BOARD_SIZE * BOARD_SIZE)).fill(0);
     for (let x = 0; x < BOARD_SIZE; x ++) {
       for (let y = 0; y < BOARD_SIZE; y ++) {
-        array[y * BOARD_SIZE + x] = this.get(x    , y - 1) * 0.5 // 🡡
-                                  + this.get(x - 1, y    ) * 0.5 // 🡠
-                                  + this.get(x    , y    )       // -
-                                  + this.get(x + 1, y    ) * 0.5 // 🡢
-                                  + this.get(x    , y + 1) * 0.5;// 🡣
+        array[y * BOARD_SIZE + x] = this.get(x    , y - 1) * 0.2 // 🡡
+                                  + this.get(x - 1, y    ) * 0.2 // 🡠
+                                  + this.get(x    , y    ) * 0.2 // -
+                                  + this.get(x + 1, y    ) * 0.2 // 🡢
+                                  + this.get(x    , y + 1) * 0.2;// 🡣
       }
     }
     this.array = array;
@@ -89,14 +89,14 @@ app.post('/move', async (request, response) => {
   // Put the snek bodies in the map:
   const { snakes = [] } = request.body.board || {};
   snakes.forEach(({ body }) => {
-    const weight = body.length * -2;
+    const weight = (body.length * -2) - 50;
     body.forEach(({ x, y }, index) => map.add(x, y, weight + index * 2));
   });
   // Only if we're low enough on health, should we add food as an incentive
   const { health = 100 } = request.body.you || {};
   if (health < 30) {
     const { food = [] } = request.body.board || {};
-    food.forEach(({ x, y }) => map.add(x, y, 20));
+    food.forEach(({ x, y }) => map.add(x, y, 50));
   }
 
   // However, if it looks like the square in our future path is, or will be,
@@ -105,6 +105,8 @@ app.post('/move', async (request, response) => {
 
   // Update the map by weighing neighbours:
   map.print({ x, y });
+  map.reweigh();
+  map.reweigh();
   map.reweigh();
   map.print({ x, y });
 
