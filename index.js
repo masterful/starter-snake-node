@@ -89,7 +89,8 @@ app.post('/move', async (request, response) => {
   // Put the snek bodies in the map:
   const { snakes = [] } = request.body.board || {};
   snakes.forEach(({ body }) => {
-    body.forEach(({ x, y }) => map.add(x, y, -30));
+    const weight = body.length * -2;
+    body.forEach(({ x, y }, index) => map.add(x, y, weight + index * 2));
   });
   // Only if we're low enough on health, should we add food as an incentive
   const { health = 100 } = request.body.you || {};
